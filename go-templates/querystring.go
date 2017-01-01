@@ -9,7 +9,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"database/sql"
 	"strings"
+	"strconv"
 )
+
+func setVars() (int) {
+	return 8890
+}
 
 type PageTags struct {
 	Title string	`json:"title"`
@@ -31,7 +36,7 @@ var (
 
 func pageHandler(w http.ResponseWriter,r *http.Request) {
 
-	db, err := sql.Open("mysql", "goservices:password@/address_book")
+	db, err := sql.Open("mysql", "goservices:C7163mwx!@/address_book")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -92,7 +97,8 @@ func pageHandler(w http.ResponseWriter,r *http.Request) {
 }
 
 func main() {
+	port:=setVars()
 	http.HandleFunc("/",pageHandler)
-	fmt.Println("Listening and ready on port :8080")
-	http.ListenAndServe(":8080",nil)
+	fmt.Println("Listening and ready on port: " +strconv.Itoa(port))
+	http.ListenAndServe(":"+strconv.Itoa(port),nil)
 }
