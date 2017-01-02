@@ -7,12 +7,30 @@ import (
 	//"io"
 	"log"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/julienschmidt/httprouter"
 	"database/sql"
-	"strings"
+	//"strings"
 	"strconv"
 )
 
+var (
+	dbFirstName string
+	dbLastName string
+	dbPhone string
+	resultCount int
+	dbResults string
+	pageDebugData string
+	dbUsername string
+	dbPassword string
+	dbLoginString string
+	dbQuery string
+	doSecondaryCmd string
+)
+
 func setVars() (int) {
+	dbUsername="goservices"
+	dbPassword="C7163mwx!"
+	dbLoginString=dbUsername+":"+dbPassword
 	return 8890
 }
 
@@ -25,18 +43,27 @@ type PageTags struct {
 	DebugData	string
 }
 
-var (
-	dbFirstName string
-	dbLastName string
-	dbPhone string
-	resultCount int
-	dbResults string
-	pageDebugData string
-)
+func pageHandler(w http.ResponseWriter,r *http.Request, params  httprouter.Params) {
 
-func pageHandler(w http.ResponseWriter,r *http.Request) {
+	pageDebugData=""
 
-	db, err := sql.Open("mysql", "goservices:C7163mwx!@/address_book")
+	if r.Method=="POST" {
+		pageDebugData=r.FormValue("cmd")
+		switch r.FormValue("cmd") {
+		case "filter":
+			dbQuery = "select firstname, lastname, phone from records where LOWER(firstname)=LOWER('" + r.FormValue("filter") + "') or LOWER(lastname)=LOWER('" + r.FormValue("filter") + "') or phone='" + r.FormValue("filter") + "'"
+			pageDebugData+="<br>" + dbQuery
+		case "add":
+			dbQuery = "insert into records values('" + r.FormValue("firstname") + "','" + r.FormValue("lastname") + "','" + r.FormValue("phone") + "')"
+			doSecondaryCmd="refresh"
+			pageDebugData+="<br>" + dbQuery
+		}
+	} else {
+		dbQuery = "select firstname, lastname, phone from records"
+		pageDebugData+="<br>" + dbQuery
+	}
+
+	db, err := sql.Open("mysql", dbLoginString+"@/address_book")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -47,58 +74,43 @@ func pageHandler(w http.ResponseWriter,r *http.Request) {
 		panic(err.Error())
 	}
 
-	//First check the path
-	rURL:=r.URL.Path[1:]	//Strip the leading slash
 
-	if r.Method=="GET" {
-		key:="q"
-		val:=r.URL.Query().Get(key)
-		
-		pageDebugData="You sent a GET request<br>You searched for '" + key + "=" + val +"'"
-	} else {
-		pageDebugData="You are posting data<br>"
-		r.ParseForm()
-		for k,v:=range r.Form {
-			pageDebugData+= k+" = "+strings.Join(v,"")+"<br>"
-		}
-	}
+	//Load the main template
+	tpl:=template.New("main.tpl")
+	tpl=tpl.Funcs(template.FuncMap{
+		"populateData": func() string {
+			rows,err := db.Query(dbQuery)
+			defer rows.Close()
 
-	if rURL=="" {
-		//Load the main template
-		tpl:=template.New("main.tpl")
-		tpl=tpl.Funcs(template.FuncMap{
-			"populateData": func() string {
-				rows,err := db.Query("select firstname, lastname, phone from records")
-				defer rows.Close()
-
-				dbResults=""
-				resultCount=0
-				for rows.Next() {
-					err=rows.Scan(&dbFirstName,&dbLastName,&dbPhone)
-					if err!=nil {
-						log.Fatalln(err)
-					}
-					dbResults+="<tr><td>"+dbFirstName+"</td><td>"+dbLastName+"</td><td>"+dbPhone+"</td></tr>"
-					resultCount=resultCount+1
+			dbResults=""
+			resultCount=0
+			for rows.Next() {
+				err=rows.Scan(&dbFirstName,&dbLastName,&dbPhone)
+				if err!=nil {
+					log.Fatalln(err)
 				}
+				dbResults+="<tr><td>"+dbFirstName+"</td><td>"+dbLastName+"</td><td>"+dbPhone+"</td></tr>"
+				resultCount=resultCount+1
+			}
 
-				return dbResults
-			},
-		})
+			return dbResults
+		},
+	})
 
-		tpl,err=tpl.ParseFiles("templates/main.tpl")
-		if err!=nil { log.Fatalln(err.Error()) }
-		err = tpl.Execute(w,PageTags{Title:"Address Book",RecordCount:resultCount,DebugData:pageDebugData,})
-		if err!=nil {
-			log.Fatalln(err)
-		}
+	tpl,err=tpl.ParseFiles("templates/main.tpl")
+	if err!=nil { log.Fatalln(err.Error()) }
+	err = tpl.Execute(w,PageTags{Title:"Address Book",RecordCount:resultCount,DebugData:pageDebugData,})
+	if err!=nil {
+		log.Fatalln(err)
 	}
-
 }
 
 func main() {
-	port:=setVars()
-	http.HandleFunc("/",pageHandler)
-	fmt.Println("Listening and ready on port: " +strconv.Itoa(port))
-	http.ListenAndServe(":"+strconv.Itoa(port),nil)
+	port:=strconv.Itoa(setVars())
+	router:=httprouter.New()
+	router.GET("/",pageHandler)
+	router.GET("/:cmd",pageHandler)
+	router.POST("/",pageHandler)
+	fmt.Println("Listening and ready on port: " +port)
+	http.ListenAndServe(":"+port,router)
 }

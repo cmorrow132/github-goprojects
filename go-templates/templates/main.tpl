@@ -21,7 +21,7 @@
 		<tr>
 		    <form method=POST action="/">
 		        <input type=hidden name='cmd' value='filter'>
-		        <td colspan=3><input type=text name='filter' size=50><input type=submit value='Filter'></td>
+		        <td colspan=3><input type=text name='filter' size=50><input type=submit value='Filter'>&nbsp&nbsp&nbsp;<font size="-1"><a href="/">(Reset filter)</a></font></td>
 		    </form>
 		</tr><tr>
 			<td colspan=3 bgcolor="#FFFC86" align=left border=0><font size="2"><b>{{.RecordCount}} matched records</b><br></td>
@@ -37,7 +37,6 @@
 	</div>
 </center>
 <br>
-	<a><div id="reloadData"><u>Refresh</u></div></a>
 <br><br>
 <h4>Debug data</h4>
 {{.DebugData}}
