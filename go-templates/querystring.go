@@ -40,7 +40,6 @@ type PageTags struct {
 	LastName	string	`json:"lastname"`
 	Phone		string	`json:"phone"`
 	DebugData	string
-	//
 }
 
 func pageHandler(w http.ResponseWriter,r *http.Request, params  httprouter.Params) {
