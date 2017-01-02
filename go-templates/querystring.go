@@ -24,7 +24,6 @@ var (
 	dbPassword string
 	dbLoginString string
 	dbQuery string
-	doSecondaryCmd string
 )
 
 func setVars() (int) {
@@ -55,7 +54,6 @@ func pageHandler(w http.ResponseWriter,r *http.Request, params  httprouter.Param
 			pageDebugData+="<br>" + dbQuery
 		case "add":
 			dbQuery = "insert into records values('" + r.FormValue("firstname") + "','" + r.FormValue("lastname") + "','" + r.FormValue("phone") + "')"
-			doSecondaryCmd="refresh"
 			pageDebugData+="<br>" + dbQuery
 		}
 	} else {
