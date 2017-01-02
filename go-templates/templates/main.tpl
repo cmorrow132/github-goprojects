@@ -19,9 +19,9 @@
 	<div id="dbResult">
 		<table width="80%" border=0>
 		<tr>
-		    <form method=POST action="/">
+		    <form method=POST action="/{{.ProxyURL}}">
 		        <input type=hidden name='cmd' value='filter'>
-		        <td colspan=3><input type=text name='filter' size=50><input type=submit value='Filter'>&nbsp&nbsp&nbsp;<font size="-1"><a href="/">(Reset filter)</a></font></td>
+		        <td colspan=3><input type=text name='filter' size=50><input type=submit value='Filter'>&nbsp&nbsp&nbsp;<font size="-1"><a href="/{{.ProxyURL}}">(Reset filter)</a></font></td>
 		    </form>
 		</tr><tr>
 			<td colspan=3 bgcolor="#FFFC86" align=left border=0><font size="2"><b>{{.RecordCount}} matched records</b><br></td>
@@ -29,7 +29,7 @@
 			<th align=left><u><font size="3">First Name</th><th align=left><u><font size="3">Last Name</th><th align=left><u><font size="3">Phone</th>
 		{{populateData}}
 		<tr>
-			<form method=POST action="/">
+			<form method=POST action="/{{.ProxyURL}}">
 			    <input type=hidden name='cmd' value='add'>
 				<td><input type=text name='firstname'></td><td><input type=text name='lastname'></td><td><input type=text name="phone"><input type=submit value='Add'></td>
 			</form>
